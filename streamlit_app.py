@@ -3,9 +3,11 @@ import pandas as pd
 import numpy as np
 import altair as alt
 
+#Kode untuk membaca file
 df = pd.read_csv('produksi_minyak_mentah.csv')
 df_js = pd.read_json('kode_negara_lengkap.json')
 
+#Kode untuk menghapus organisasi
 arr = []
 for i in list(df['kode_negara']) :
     if i not in list(df_js['alpha-3']) :
@@ -15,6 +17,7 @@ for i in arr :
     
 nation_name = df_js['name']
 
+#Mencari total produksi tiap negara untuk keseluruhan tahun
 df.sort_values(by=['kode_negara'], inplace=True)
 df.reset_index(drop=True, inplace=True)
 sum_produksi = [[0, 0] for i in range(len(df.kode_negara.unique()))]
@@ -38,50 +41,65 @@ container2 = st.container()
 container3 = st.container()
 container4 = st.container()
 with col1 :
+
+#1a Menampilkan jumlah produksi minyak mentah terhadap waktu(tahun)dari suatu negara N
     with container1:
+        #Kode untuk membaca input negara dari user 
         option = st.selectbox(
             "Nation",
             nation_name
         )
         if st.button('Lihat grafik a'):
+            #Kode untuk mencari jumlah produksi suatu negara pada setiap tahun
             choosen_nation = df_js.loc[df_js['name'] == option]
             choosen_nation.reset_index(drop=True, inplace=True)
             nation_code = str(choosen_nation['alpha-3'][0])
             result1 = df.loc[df['kode_negara'] == nation_code]
             result1 = result1[['tahun', 'produksi']]
             result1.reset_index(drop=True, inplace=True)
+            #Kode untuk menampilkan grafik
             chart = alt.Chart(result1).mark_line().encode(
                 x='tahun',
                 y='produksi'
             )
             st.altair_chart(chart, use_container_width=True)
+            
+ #1b Menampilkan grafik yang menunjukan B-besar negara dengan jumlah produksi terbesar pada tahun T
     with container2 :
+        #Kode untuk membaca input dari user yaitu jumlah negara dan tahun
         num_nation = int(st.number_input('Masukkan jumlah negara yang ditampilkan'))
         year = int(st.number_input('Masukkan tahun'))
         if st.button('Lihat grafik b'):
+            #Kode untuk menyaring negara dengan jumlah produksi terbesar pada tahun tersebut
             result2 = df.loc[df['tahun'] == year]
             result2.sort_values(by=['produksi'], ascending=False, inplace=True)
             result2.reset_index(drop=True, inplace=True)
             if(len(result2)>num_nation) :
                 result2 = result2.head(num_nation)
             result2
+            #Kode untuk menampilkan grafik beberapa negara dengan produksi terbesar
             bars1 = alt.Chart(result2).mark_bar().encode(
-                x='produksi',
-                y='kode_negara'
+                x='kode_negara',
+                y='produksi'
             )
             st.altair_chart(bars1, use_container_width=True)
 with col2 :
+    #1c Menampilkan grafik yang menunjukan B-besar negara dengan jumlah produksi terbesar secara kumulatif keseluruhan tahun
     with container3 :
+        #Kode untuk menerima masukan jumlah negara
         nation_count = int(st.number_input('Masukkan jumlah negara yang ingin ditampilkan'))
         if st.button('Lihat grafik c'):
+            #Kode untuk menyaring negara-negara yang memiliki jumlah kumulatif terbesar
             if(len(sum_produksi) >= nation_count) :
                 result3 = sum_produksi.head(nation_count)
             result3
+            #Kode untuk menampilkan grafik 
             bars2 = alt.Chart(result3).mark_bar().encode(
-                x='total_produksi',
-                y='kode_negara'
+                x='kode_negara',
+                y='total_produksi'
             )
             st.altair_chart(bars2, use_container_width=True)
+    #1d Menampilkan nama lengkap negara, kode negara, region, dan sub-region dengan jumlah produksi terbesar,terkecil dan produksi sama dengan nol pada tahun T dan keseluruhan tahun
     with container4 :
         df_year = df.loc[df['tahun'] == year]
         df_year.sort_values(by=['produksi'], ascending=False, inplace=True)
@@ -91,6 +109,7 @@ with col2 :
         df2.reset_index(drop=True, inplace=True)
         if st.button('Lihat info 1'):
             if(len(df_year) > 0) :
+                #Kode untuk menampilkan informasi nama lengkap negara, kode negara, region, dan sub-region dengan jumlah produksi terbesar pada tahun T dan keseluruhan tahun
                 max_nat = df_year.head(1)
                 max_nat_code = str(max_nat["kode_negara"][0])
                 nat_info = df_js.loc[df_js['alpha-3'] == max_nat_code]
@@ -116,6 +135,7 @@ with col2 :
                     st.write("Informasi negara kurang lengkap selain kode negara")
                     st.write("Kode negara : ", str(max_nat_all_year_code))
         if st.button('Lihat info 2'):
+            #Kode untuk menampilkan informasi nama lengkap negara, kode negara, region, dan sub-region dengan jumlah produksi terkecil (tidak sama dengan nol) pada tahun T dan keseluruhan tahun
             df2 = df.loc[df['produksi'] > 0]
             df2.sort_values(by=['produksi'], inplace=True)
             df2.reset_index(drop=True, inplace=True)
@@ -148,6 +168,7 @@ with col2 :
                     st.write("Informasi negara kurang lengkap selain kode negara")
                     st.write("Kode negara : ", str(min_nat_all_year_code))
         if st.button('Lihat info 3'):
+            #Kode untuk menampilkan informasi nama lengkap negara, kode negara, region, dan sub-region dengan jumlah produksi sama dengan nol pada tahun T dan keseluruhan tahun
             df2 = df.loc[df['produksi'] == 0]
             df2.sort_values(by=['kode_negara'], inplace=True)
             df2.reset_index(drop=True, inplace=True)
